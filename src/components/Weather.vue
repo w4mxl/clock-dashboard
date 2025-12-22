@@ -27,7 +27,7 @@ async function fetchWeather(lat: number, lon: number) {
     loading.value = false;
     
     if (locationText.value.includes('定位中')) {
-      locationText.value = `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+      locationText.value = `${lon.toFixed(2)}, ${lat.toFixed(2)}`;
     }
   } catch (error) {
     weatherInfo.value.text = "接口错误";
