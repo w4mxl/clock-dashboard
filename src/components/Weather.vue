@@ -17,7 +17,7 @@ const iconMap: Record<string, any> = {
   'cloud-lightning': CloudLightning
 };
 
-async function fetchWeather(lat: number, lon: number) {
+async function fetchWeather(lat: number, lon: number, locationName?: string) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=relativehumidity_2m&daily=temperature_2m_max,temperature_2m_min&timezone=auto`;
   try {
     const response = await fetch(url);
@@ -26,7 +26,9 @@ async function fetchWeather(lat: number, lon: number) {
     weatherInfo.value = mapWmoCode(data.current_weather.weathercode);
     loading.value = false;
     
-    if (locationText.value.includes('定位中')) {
+    if (locationName) {
+      locationText.value = locationName;
+    } else if (locationText.value.includes('定位中')) {
       locationText.value = `${lon.toFixed(2)}, ${lat.toFixed(2)}`;
     }
   } catch (error) {
@@ -34,15 +36,27 @@ async function fetchWeather(lat: number, lon: number) {
   }
 }
 
+async function reverseGeocode(lat: number, lon: number) {
+  try {
+    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`, {
+      headers: { 'Accept-Language': 'zh-CN,zh;q=0.9' }
+    });
+    const data = await response.json();
+    const city = data.address.city || data.address.town || data.address.village || data.address.county || '未知城市';
+    return city;
+  } catch (e) {
+    return `${lon.toFixed(2)}, ${lat.toFixed(2)}`;
+  }
+}
+
 async function fetchByIp() {
   try {
     const res = await fetch('https://ipapi.co/json/');
     const data = await res.json();
-    locationText.value = `${data.city}, ${data.country_code}`;
-    await fetchWeather(data.latitude, data.longitude);
+    const cityName = data.city || '未知城市';
+    await fetchWeather(data.latitude, data.longitude, `${cityName}, ${data.country_code}`);
   } catch (e) {
-    locationText.value = "北京市 (默认)";
-    await fetchWeather(39.9, 116.4);
+    await fetchWeather(39.9, 116.4, "北京市 (默认)");
   }
 }
 
@@ -51,7 +65,12 @@ async function getLocationAndWeather() {
   try {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        async (p) => await fetchWeather(p.coords.latitude, p.coords.longitude),
+        async (p) => {
+          const lat = p.coords.latitude;
+          const lon = p.coords.longitude;
+          const city = await reverseGeocode(lat, lon);
+          await fetchWeather(lat, lon, city);
+        },
         async () => await fetchByIp(),
         { timeout: 5000 }
       );
