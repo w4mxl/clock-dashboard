@@ -3,6 +3,7 @@ import { storeToRefs } from 'pinia'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import CalendarView from './components/CalendarView.vue'
 import ClockWeather from './components/ClockWeather.vue'
+import NewYearEgg from './components/NewYearEgg.vue'
 import SettingsModal from './components/SettingsModal.vue'
 import SmartHome from './components/SmartHome.vue'
 import WeatherEffects from './components/WeatherEffects.vue'
@@ -143,6 +144,9 @@ onUnmounted(() => {
         <CalendarView ref="calendarRef" />
       </div>
     </div>
+
+    <!-- 元旦彩蛋：独立模块，可随时移除 -->
+    <NewYearEgg />
 
     <WeatherEffects v-if="shouldShowWeatherEffects" />
 
