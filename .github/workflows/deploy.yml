@@ -11,6 +11,7 @@ on:
       - 'CHANGELOG.md'
       - 'eslint.config.js'
       - '.gitignore'
+  workflow_dispatch:  # 加上这一行，就会出现手动运行按钮
 
 permissions:
   contents: write # 允许 Actions 修改仓库内容
